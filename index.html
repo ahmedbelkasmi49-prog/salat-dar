@@ -1,1 +1,322 @@
+cat > /mnt/user-data/outputs/index.html << 'HTMLEOF'
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>سلة الدار</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; background: #f4f6f4; }
+  button { cursor: pointer; font-family: inherit; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState } = React;
 
+const categories = [
+  { id: "khodra", icon: "🥬", label: "خضرة وفواكه" },
+  { id: "lahm", icon: "🥩", label: "لحم ودجاج" },
+  { id: "hout", icon: "🐟", label: "حوت وسمك" },
+  { id: "manzili", icon: "🧺", label: "مواد منزلية" },
+  { id: "matbakh", icon: "🍳", label: "أدوات المطبخ" },
+  { id: "ajhiza", icon: "🔌", label: "أجهزة منزلية" },
+];
+
+const products = [
+  { id: 1, name: "طماطم طازجة", price: 4, unit: "كيلو", cat: "khodra", seller: "فرم البركة", rating: 4.8, img: "🍅" },
+  { id: 2, name: "دجاج بلدي", price: 28, unit: "كيلو", cat: "lahm", seller: "الجزارة الذهبية", rating: 4.9, img: "🍗" },
+  { id: 3, name: "سمك سردين", price: 15, unit: "كيلو", cat: "hout", seller: "سوق البحر", rating: 4.7, img: "🐟" },
+  { id: 4, name: "بطاطس", price: 3, unit: "كيلو", cat: "khodra", seller: "فرم البركة", rating: 4.6, img: "🥔" },
+  { id: 5, name: "لحم بقري", price: 90, unit: "كيلو", cat: "lahm", seller: "الجزارة الذهبية", rating: 4.9, img: "🥩" },
+  { id: 6, name: "مسحوق غسيل", price: 35, unit: "قطعة", cat: "manzili", seller: "بيت النظافة", rating: 4.5, img: "🧴" },
+  { id: 7, name: "خلاط كهربائي", price: 250, unit: "قطعة", cat: "ajhiza", seller: "إلكترو دار", rating: 4.8, img: "🥤" },
+  { id: 8, name: "طاجين", price: 80, unit: "قطعة", cat: "matbakh", seller: "فخار الأطلس", rating: 4.7, img: "🫕" },
+];
+
+const orders = [
+  { id: "#1042", client: "أحمد مرابط", items: 3, total: 87, status: "قيد التوصيل", time: "منذ 12 دقيقة", livreur: "يوسف" },
+  { id: "#1041", client: "فاطمة الزهراء", items: 5, total: 156, status: "تم التوصيل", time: "منذ 1 ساعة", livreur: "كريم" },
+  { id: "#1040", client: "محمد العلوي", items: 2, total: 45, status: "جديد", time: "منذ 5 دقائق", livreur: "—" },
+];
+
+const statusColor = (s) => {
+  if (s === "تم التوصيل") return "#1e7d34";
+  if (s === "قيد التوصيل") return "#f59e0b";
+  if (s === "جديد") return "#3b82f6";
+  return "#6b7280";
+};
+
+function App() {
+  const [screen, setScreen] = useState("home");
+  const [role, setRole] = useState(null);
+  const [cart, setCart] = useState([]);
+  const [activeCat, setActiveCat] = useState("khodra");
+  const [regForm, setRegForm] = useState({ name: "", phone: "", city: "", type: "" });
+  const [registered, setRegistered] = useState(false);
+  const [orderPlaced, setOrderPlaced] = useState(false);
+
+  const addToCart = (p) => {
+    setCart(prev => {
+      const ex = prev.find(i => i.id === p.id);
+      if (ex) return prev.map(i => i.id === p.id ? { ...i, qty: i.qty + 1 } : i);
+      return [...prev, { ...p, qty: 1 }];
+    });
+  };
+  const removeFromCart = (id) => setCart(prev => prev.filter(i => i.id !== id));
+  const cartTotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
+  const cartCount = cart.reduce((s, i) => s + i.qty, 0);
+  const filteredProducts = products.filter(p => p.cat === activeCat);
+
+  if (screen === "home") return (
+    <div style={{ minHeight:"100vh", background:"linear-gradient(160deg,#0f2d16,#1e7d34 60%,#2ecc52)", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:24, direction:"rtl" }}>
+      <div style={{ textAlign:"center", marginBottom:40 }}>
+        <div style={{ fontSize:72, marginBottom:8 }}>🏠</div>
+        <h1 style={{ color:"#fff", fontSize:42, fontWeight:900, margin:0 }}>سلة الدار</h1>
+        <p style={{ color:"#a7f3c0", fontSize:16, marginTop:8 }}>كل ما تحتاجه لدارك... فخطوة وحدة</p>
+        <div style={{ display:"flex", gap:8, justifyContent:"center", flexWrap:"wrap", marginTop:16 }}>
+          {categories.map(c => <span key={c.id} style={{ background:"rgba(255,255,255,0.15)", color:"#fff", borderRadius:20, padding:"4px 12px", fontSize:13 }}>{c.icon} {c.label}</span>)}
+        </div>
+      </div>
+      <div style={{ display:"grid", gap:12, width:"100%", maxWidth:360 }}>
+        {[
+          { label:"🛒 زبون — اطلب الآن", val:"client", bg:"#fff", color:"#145a24" },
+          { label:"🏪 بائع — سجل متجرك", val:"seller", bg:"#2ecc52", color:"#fff" },
+          { label:"🛵 ليفريور — انضم للفريق", val:"livreur", bg:"#1a3a24", color:"#a7f3c0" },
+          { label:"⚙️ لوحة التحكم", val:"admin", bg:"#0f1a12", color:"#4ade80" },
+        ].map(b => (
+          <button key={b.val} onClick={() => { setRole(b.val); setScreen(b.val === "admin" ? "admin" : "register"); }}
+            style={{ background:b.bg, color:b.color, border:"none", borderRadius:14, padding:"16px 20px", fontSize:16, fontWeight:700, textAlign:"right", boxShadow:"0 4px 20px rgba(0,0,0,0.2)" }}>
+            {b.label}
+          </button>
+        ))}
+      </div>
+      <p style={{ color:"#6ee7a0", fontSize:13, marginTop:24 }}>الاشتراك: 200 درهم / شهر للبائعين والليفريورات</p>
+    </div>
+  );
+
+  if (screen === "register") return (
+    <div style={{ minHeight:"100vh", background:"#f4f6f4", direction:"rtl" }}>
+      <div style={{ background:"#1e7d34", padding:"18px 20px", display:"flex", alignItems:"center", gap:12 }}>
+        <button onClick={() => setScreen("home")} style={{ background:"none", border:"none", color:"#fff", fontSize:22 }}>←</button>
+        <div>
+          <div style={{ color:"#fff", fontWeight:800, fontSize:18 }}>
+            {role === "client" ? "تسجيل زبون" : role === "seller" ? "تسجيل بائع" : "تسجيل ليفريور"}
+          </div>
+          {(role === "seller" || role === "livreur") && <div style={{ color:"#a7f3c0", fontSize:12 }}>اشتراك شهري: 200 درهم</div>}
+        </div>
+      </div>
+      {registered ? (
+        <div style={{ padding:32, textAlign:"center" }}>
+          <div style={{ fontSize:64 }}>✅</div>
+          <h2 style={{ color:"#1e7d34", fontSize:24, fontWeight:800 }}>تم التسجيل بنجاح!</h2>
+          {(role === "seller" || role === "livreur") && (
+            <div style={{ background:"#fff", borderRadius:14, padding:16, margin:"16px 0", border:"2px solid #2ecc52" }}>
+              <p style={{ fontWeight:600 }}>💳 ادفع اشتراكك الشهري</p>
+              <div style={{ background:"#1e7d34", color:"#fff", borderRadius:10, padding:"10px 16px", fontWeight:700, fontSize:18, marginTop:8 }}>200 درهم / شهر</div>
+            </div>
+          )}
+          <button onClick={() => { setRegistered(false); setScreen(role === "client" ? "shop" : "home"); }}
+            style={{ background:"#1e7d34", color:"#fff", border:"none", borderRadius:12, padding:"14px 32px", fontSize:16, fontWeight:700, marginTop:8 }}>
+            {role === "client" ? "🛒 ابدأ التسوق" : "العودة للرئيسية"}
+          </button>
+        </div>
+      ) : (
+        <div style={{ padding:20 }}>
+          {[
+            { field:"name", label:"الاسم الكامل", placeholder:"مثال: أحمد مرابط" },
+            { field:"phone", label:"رقم الهاتف", placeholder:"06xxxxxxxx" },
+            { field:"city", label:"المدينة", placeholder:"الدار البيضاء، الرباط..." },
+            ...(role === "seller" ? [{ field:"type", label:"نوع المتجر", placeholder:"مثال: خضرة، لحم..." }] : []),
+          ].map(f => (
+            <div key={f.field} style={{ marginBottom:16 }}>
+              <label style={{ display:"block", color:"#145a24", fontWeight:700, marginBottom:6, fontSize:14 }}>{f.label}</label>
+              <input value={regForm[f.field]} onChange={e => setRegForm(p => ({ ...p, [f.field]: e.target.value }))}
+                placeholder={f.placeholder}
+                style={{ width:"100%", padding:"13px 14px", borderRadius:10, border:"1.5px solid #d1fae5", fontSize:15, background:"#fff", direction:"rtl" }} />
+            </div>
+          ))}
+          {(role === "seller" || role === "livreur") && (
+            <div style={{ background:"#fff7ed", border:"1.5px solid #fed7aa", borderRadius:12, padding:14, marginBottom:16 }}>
+              <p style={{ color:"#92400e", fontWeight:700, fontSize:14, margin:0 }}>💳 الاشتراك الشهري: 200 درهم</p>
+              <p style={{ color:"#b45309", fontSize:13, margin:"4px 0 0" }}>يُدفع بعد تأكيد التسجيل</p>
+            </div>
+          )}
+          <button onClick={() => setRegistered(true)}
+            style={{ width:"100%", background:"#1e7d34", color:"#fff", border:"none", borderRadius:12, padding:16, fontSize:17, fontWeight:800 }}>
+            تسجيل الآن ✅
+          </button>
+        </div>
+      )}
+    </div>
+  );
+
+  if (screen === "shop") return (
+    <div style={{ minHeight:"100vh", background:"#f4f6f4", direction:"rtl" }}>
+      <div style={{ background:"#1e7d34", padding:"16px 16px 0" }}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
+          <div>
+            <div style={{ color:"#a7f3c0", fontSize:12 }}>مرحبًا 👋</div>
+            <div style={{ color:"#fff", fontWeight:800, fontSize:18 }}>سلة الدار</div>
+          </div>
+          <button onClick={() => setScreen("cart")}
+            style={{ background: cartCount > 0 ? "#ff6b35" : "rgba(255,255,255,0.2)", border:"none", borderRadius:12, padding:"8px 14px", color:"#fff", fontWeight:700, fontSize:15 }}>
+            🛒 {cartCount > 0 ? cartCount : ""}
+          </button>
+        </div>
+        <div style={{ display:"flex", gap:8, overflowX:"auto", paddingBottom:12 }}>
+          {categories.map(c => (
+            <button key={c.id} onClick={() => setActiveCat(c.id)}
+              style={{ background: activeCat === c.id ? "#fff" : "rgba(255,255,255,0.15)", color: activeCat === c.id ? "#1e7d34" : "#fff", border:"none", borderRadius:20, padding:"6px 14px", fontSize:13, fontWeight:600, whiteSpace:"nowrap", flexShrink:0 }}>
+              {c.icon} {c.label}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div style={{ padding:16 }}>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
+          {filteredProducts.length === 0 ? (
+            <div style={{ gridColumn:"1/-1", textAlign:"center", color:"#6b7280", padding:40 }}>
+              <div style={{ fontSize:40 }}>📦</div>
+              <p>لا توجد منتجات حاليًا</p>
+            </div>
+          ) : filteredProducts.map(p => (
+            <div key={p.id} style={{ background:"#fff", borderRadius:14, padding:14, boxShadow:"0 2px 8px rgba(0,0,0,0.06)" }}>
+              <div style={{ fontSize:40, textAlign:"center", marginBottom:8 }}>{p.img}</div>
+              <div style={{ fontWeight:700, fontSize:14, marginBottom:2 }}>{p.name}</div>
+              <div style={{ color:"#6b7280", fontSize:11, marginBottom:6 }}>من: {p.seller}</div>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                <span style={{ color:"#1e7d34", fontWeight:800, fontSize:15 }}>{p.price} د/{p.unit}</span>
+                <button onClick={() => addToCart(p)}
+                  style={{ background:"#1e7d34", color:"#fff", border:"none", borderRadius:8, padding:"5px 10px", fontSize:13, fontWeight:700 }}>+ أضف</button>
+              </div>
+              <div style={{ color:"#f59e0b", fontSize:12, marginTop:4 }}>⭐ {p.rating}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+      {cartCount > 0 && (
+        <div style={{ position:"fixed", bottom:20, left:16, right:16 }}>
+          <button onClick={() => setScreen("cart")}
+            style={{ width:"100%", background:"#1e7d34", color:"#fff", border:"none", borderRadius:14, padding:16, fontSize:16, fontWeight:800, boxShadow:"0 6px 20px rgba(30,125,52,0.4)" }}>
+            🛒 السلة ({cartCount}) — {cartTotal} درهم
+          </button>
+        </div>
+      )}
+    </div>
+  );
+
+  if (screen === "cart") return (
+    <div style={{ minHeight:"100vh", background:"#f4f6f4", direction:"rtl" }}>
+      <div style={{ background:"#1e7d34", padding:"18px 20px", display:"flex", alignItems:"center", gap:12 }}>
+        <button onClick={() => setScreen("shop")} style={{ background:"none", border:"none", color:"#fff", fontSize:22 }}>←</button>
+        <div style={{ color:"#fff", fontWeight:800, fontSize:18 }}>🛒 سلتك</div>
+      </div>
+      {orderPlaced ? (
+        <div style={{ padding:32, textAlign:"center" }}>
+          <div style={{ fontSize:72 }}>🎉</div>
+          <h2 style={{ color:"#1e7d34", fontWeight:800 }}>تم إرسال طلبك!</h2>
+          <p style={{ color:"#6b7280" }}>الليفريور في طريقه إليك 🛵</p>
+          <button onClick={() => { setCart([]); setOrderPlaced(false); setScreen("shop"); }}
+            style={{ background:"#1e7d34", color:"#fff", border:"none", borderRadius:12, padding:"14px 32px", fontSize:16, fontWeight:700, marginTop:16 }}>
+            العودة للتسوق
+          </button>
+        </div>
+      ) : cart.length === 0 ? (
+        <div style={{ padding:40, textAlign:"center" }}>
+          <div style={{ fontSize:60 }}>🛒</div>
+          <p style={{ color:"#6b7280", fontSize:16 }}>سلتك فارغة</p>
+          <button onClick={() => setScreen("shop")} style={{ background:"#1e7d34", color:"#fff", border:"none", borderRadius:12, padding:"12px 24px", fontSize:15, fontWeight:700 }}>تسوق الآن</button>
+        </div>
+      ) : (
+        <div style={{ padding:16 }}>
+          {cart.map(item => (
+            <div key={item.id} style={{ background:"#fff", borderRadius:14, padding:14, marginBottom:10, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+              <div>
+                <div style={{ fontSize:28 }}>{item.img}</div>
+                <div style={{ fontWeight:700, fontSize:14 }}>{item.name}</div>
+                <div style={{ color:"#1e7d34", fontWeight:700 }}>{item.price * item.qty} درهم × {item.qty}</div>
+              </div>
+              <button onClick={() => removeFromCart(item.id)} style={{ background:"#fee2e2", color:"#dc2626", border:"none", borderRadius:8, padding:"6px 12px", fontWeight:700 }}>حذف</button>
+            </div>
+          ))}
+          <div style={{ background:"#fff", borderRadius:14, padding:16, marginTop:16 }}>
+            <div style={{ display:"flex", justifyContent:"space-between", marginBottom:12 }}>
+              <span style={{ color:"#6b7280" }}>المجموع</span>
+              <span style={{ fontWeight:800, color:"#1e7d34", fontSize:18 }}>{cartTotal} درهم</span>
+            </div>
+            <button onClick={() => setOrderPlaced(true)}
+              style={{ width:"100%", background:"#1e7d34", color:"#fff", border:"none", borderRadius:12, padding:16, fontSize:17, fontWeight:800 }}>
+              ✅ تأكيد الطلب — الدفع عند الاستلام
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
+  if (screen === "admin") return (
+    <div style={{ minHeight:"100vh", background:"#0f1f14", direction:"rtl" }}>
+      <div style={{ background:"linear-gradient(135deg,#0f2d16,#1e7d34)", padding:"20px 20px 16px" }}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+          <div>
+            <div style={{ color:"#4ade80", fontSize:12, fontWeight:600 }}>لوحة التحكم</div>
+            <div style={{ color:"#fff", fontWeight:900, fontSize:22 }}>🏠 سلة الدار</div>
+          </div>
+          <button onClick={() => setScreen("home")} style={{ background:"rgba(255,255,255,0.1)", border:"none", color:"#fff", borderRadius:10, padding:"8px 14px", fontSize:13 }}>خروج</button>
+        </div>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginTop:16 }}>
+          {[
+            { label:"إجمالي الطلبات", val:"1,042", icon:"📦" },
+            { label:"البائعون النشطون", val:"3", icon:"🏪" },
+            { label:"الليفريورات", val:"8", icon:"🛵" },
+            { label:"الدخل/شهر", val:"1,200 د", icon:"💰" },
+          ].map(s => (
+            <div key={s.label} style={{ background:"rgba(255,255,255,0.08)", borderRadius:14, padding:14, border:"1px solid rgba(255,255,255,0.1)" }}>
+              <div style={{ fontSize:24 }}>{s.icon}</div>
+              <div style={{ color:"#4ade80", fontWeight:900, fontSize:18, marginTop:4 }}>{s.val}</div>
+              <div style={{ color:"#86efac", fontSize:12 }}>{s.label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div style={{ padding:16 }}>
+        <h3 style={{ color:"#4ade80", fontWeight:800, marginBottom:12 }}>📦 آخر الطلبات</h3>
+        {orders.map(o => (
+          <div key={o.id} style={{ background:"#1a3a24", borderRadius:14, padding:14, marginBottom:10, border:"1px solid rgba(74,222,128,0.15)" }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
+              <div>
+                <div style={{ color:"#fff", fontWeight:700 }}>{o.id} — {o.client}</div>
+                <div style={{ color:"#86efac", fontSize:13 }}>{o.items} منتجات • {o.total} درهم</div>
+                <div style={{ color:"#6b7280", fontSize:12 }}>🛵 {o.livreur} • {o.time}</div>
+              </div>
+              <span style={{ background:statusColor(o.status)+"22", color:statusColor(o.status), borderRadius:20, padding:"4px 10px", fontSize:12, fontWeight:700 }}>
+                {o.status}
+              </span>
+            </div>
+          </div>
+        ))}
+        <div style={{ background:"#1a2a3a", borderRadius:14, padding:16, marginTop:8, border:"1px solid rgba(59,130,246,0.3)" }}>
+          <h3 style={{ color:"#60a5fa", fontWeight:800, marginBottom:10 }}>⏳ قريبًا</h3>
+          {["📍 تتبع GPS مباشر","💳 دفع إلكتروني","📢 نظام إعلانات","🤖 ذكاء اصطناعي"].map(f => (
+            <div key={f} style={{ color:"#93c5fd", fontSize:14, padding:"6px 0", borderBottom:"1px solid rgba(59,130,246,0.1)" }}>{f}</div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
+  return null;
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
+HTMLEOF
+echo "Done"
